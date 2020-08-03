@@ -18,8 +18,7 @@
       roles: 
         - maven
     - name: run maven  
-        shell: mvn package -f ./tmp/boxfuse-sample-java-war-hello/pom.xml
-	  
+        shell: mvn package -f ./tmp/boxfuse-sample-java-war-hello/pom.xml  
     - name: Specifying a destination path
         fetch:
         src: /tmp/boxfuse-sample-java-war-hello/target/hello-1.0.war 
@@ -46,4 +45,4 @@
     - name: restart tomcat
       service: tomcat
       state: restarted  
----	       
+---
