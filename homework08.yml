@@ -14,7 +14,7 @@
       dest: /tmp/boxfuse-sample-java-war-hello
   
     - name: install maven
-      become: true
+      become: yes
       roles: 
         - maven
     - name: run maven  
@@ -25,29 +25,25 @@
         src: /tmp/boxfuse-sample-java-war-hello/target/hello-1.0.war 
         dest: /tmp/prefix-{{ prod }}
         flat: yes
-	    
 - name: run WAR at production server
   hosts: prod
-  tasks:
-		
+  tasks:	
     - name: Ensure tomcat is running
         install: tomcat8
-        become: true
+        become: yes
         script: ./bin/catalina.sh start
         args:
           chdir: etc/tomcat8
-
     - name: move WAR file to another server
       copy:
       src: /tmp
-      dest: /var/lib/tomcat8/webapps	
-		
+      dest: /var/lib/tomcat8/webapps		
     - name: Allow all access to tcp port 8080
       ufw:
       rule: allow
       port: '8080'
-      proto: tcp
-		
+      proto: tcp	
     - name: restart tomcat
-        service: name=tomcat state=restarted  
+      service: tomcat
+      state: restarted  
 ---	       
