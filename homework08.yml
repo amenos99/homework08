@@ -1,5 +1,5 @@
 ---
-- name: create WAR at SLAVE 1
+- name: create WAR at build server
   hosts: build
   tasks:
     - name: Ensure that java is running
@@ -18,7 +18,7 @@
       roles: 
         - maven
     - name: run maven  
-        shell: mvn package -f /tmp/boxfuse-sample-java-war-hello/pom.xml
+        shell: mvn package -f ./tmp/boxfuse-sample-java-war-hello/pom.xml
 	  
     - name: Specifying a destination path
         fetch:
@@ -26,26 +26,28 @@
         dest: /tmp/prefix-{{ prod }}
         flat: yes
 	    
-- name: run WAR at SLAVE 2
+- name: run WAR at production server
   hosts: prod
   tasks:
 		
     - name: Ensure tomcat is running
-      apt:
-      name: tomcat8
-      state: present
+        install: tomcat8
+        become: true
+        script: ./bin/catalina.sh start
+        args:
+          chdir: etc/tomcat8
 
     - name: move WAR file to another server
       copy:
       src: /tmp
-      dest: /var/lib/tomcat8/webapps
+      dest: /var/lib/tomcat8/webapps	
 		
-    - name: port opened	
-        firewalld:
-        port: 8080/tcp
-        permanent: yes
-        state: enabled
-handlers: 
-  - name: restart tomcat
-    service: name=tomcat state=restarted  
+    - name: Allow all access to tcp port 8080
+      ufw:
+      rule: allow
+      port: '8080'
+      proto: tcp
+		
+    - name: restart tomcat
+        service: name=tomcat state=restarted  
 ---	       
