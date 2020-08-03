@@ -1,0 +1,52 @@
+---
+- name: create WAR at SLAVE 1
+  hosts: build
+  tasks:
+    - name: Ensure that java is running
+      install: default-jdk
+      become: true
+      roles: 
+        - default-jdk
+
+    - name: Ensure Git Repo is cloned
+      git:
+      repo: 'https://github.com/boxfuse/boxfuse-sample-java-war-hello.git'
+      dest: /tmp/boxfuse-sample-java-war-hello
+  
+    - name: install maven
+      become: true
+      roles: 
+        - maven
+    - name: run maven  
+        shell: mvn package -f /tmp/boxfuse-sample-java-war-hello/pom.xml
+	  
+    - name: Specifying a destination path
+        fetch:
+        src: /tmp/boxfuse-sample-java-war-hello/target/hello-1.0.war 
+        dest: /tmp/prefix-{{ prod }}
+        flat: yes
+	    
+- name: run WAR at SLAVE 2
+  hosts: prod
+  tasks:
+		
+    - name: Ensure tomcat is running
+      apt:
+      name: tomcat8
+      state: present
+
+    - name: move WAR file to another server
+      copy:
+      src: /tmp
+      dest: /var/lib/tomcat8/webapps	
+		
+    - name: port opened	
+        firewalld:
+        port: 8080/tcp
+        permanent: yes
+        state: enabled
+		
+handlers: 
+  - name: restart tomcat
+    service: name=tomcat state=restarted  
+---	       
